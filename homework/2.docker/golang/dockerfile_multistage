@@ -1,9 +1,19 @@
-FROM python:3.9-slim-buster
-WORKDIR /python-docker
+FROM golang:1.16-buster AS build
+WORKDIR /go-build
+
 COPY . .
-RUN pip3 install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
-CMD [ "python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+RUN go mod download
+COPY *.go ./
+RUN go build -o /compiled
+
+FROM gcr.io/distroless/base-debian10
+
+WORKDIR /go-run
+
+COPY --from=build /compiled /compiled
+EXPOSE 8080
+ENTRYPOINT ["/compiled"]
 
 #build&run
-#docker build --tag python-docker .
-#docker run -d -p 5000:5000 python-docker
+#docker build --tag go-docker .
+#docker run -d -p 8080:8080 go-docker
