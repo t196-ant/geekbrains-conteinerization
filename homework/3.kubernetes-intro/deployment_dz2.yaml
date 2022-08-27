@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-deployment
+  namespace: kubedoom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubedoom-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: kubedoom-app
+      namespace: kubedoom
+    spec:
+      serviceAccountName: kubedoom
+      hostNetwork: true
+      containers:
+      - image: storaxdev/kubedoom:0.5.0
+        name: kubedoom-container
+        ports:
+        #- protocol: TCP
+        - containerPort: 5900
