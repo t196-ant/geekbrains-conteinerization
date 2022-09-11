@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      initContainers:
+      - image: busybox
+        name: mount-permissions-fix
+        command: ["sh", "-c", "chmod 777 /var/lib/postgresql/data"]
+        volumeMounts:
+        - name: pg-data-volume
+          mountPath: /var/lib/postgresql/data
+      containers:       
+      - image: postgres:10.13
+        name: postgres
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-cfg           
+                key: POSTGRES_USER
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                name: postgres-cfg           
+                key: POSTGRES_DB
+          - name: PGDATA
+            value: /var/lib/postgresql/data/pgdata
+          - name: POSTGRES_PASSWORD
+#            value: root
+            valueFrom:
+              secretKeyRef:
+                name: pg-secret
+                key: POSTGRES_PASSWORD
+        ports:
+        - containerPort: 5432
+#        resources:
+#          requests:
+#            cpu: 100m
+#            memory: 2000Mi
+#          limits:
+#            cpu: 100m
+#            memory: 2000Mi
+        volumeMounts:
+        - name: pg-data-volume
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: pg-data-volume
+        persistentVolumeClaim:
+          claimName: postgres-data-volume
+
+#get storages
+#kubectl get storageclass

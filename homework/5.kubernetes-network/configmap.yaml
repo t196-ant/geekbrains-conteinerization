@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-cfg
+data:
+  POSTGRES_USER: happy_user
+  POSTGRES_DB: dev
